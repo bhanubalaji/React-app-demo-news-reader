@@ -7,3 +7,10 @@
   font-weight: bold;
   color: #3a95b9;
 }
+
+.logout{
+  position: absolute;
+  right: 45px;
+  cursor: pointer;
+
+}

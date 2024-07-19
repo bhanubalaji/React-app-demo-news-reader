@@ -18,3 +18,9 @@
 .dashboardCard .image-setting{
     border-radius: 50%;
 }
+
+.modelImage{
+    width: 100%;
+  height: 100%;
+
+}

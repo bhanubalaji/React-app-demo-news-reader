@@ -1,0 +1,23 @@
+.signupContainer{
+    display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 5rem 0px 0px 0px;
+}
+.signupContainer .login-form{
+    border: 1px solid black;
+  border-radius: 15px;
+  padding: 7rem 7rem 7rem 7rem;
+  margin: 3rem 3rem 3rem 3rem;
+  }
+
+  .RegisterBox .ant-form-item-control-input-content{
+    display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  margin-left: 0px;
+  margin-right: 0rem;
+  }

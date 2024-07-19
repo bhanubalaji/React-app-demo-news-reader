@@ -16,12 +16,11 @@ const SubmitButton = ({ form, children, text }) => {
     // Watch all values
     const values = Form.useWatch([], form);
     React.useEffect(() => {
-        console.log('values', text);
         form
             .validateFields({
                 validateOnly: true,
             })
-            .then(() => setSubmittable(true), setSubmittable(text))
+            .then(() => setSubmittable(text))
             .catch(() => setSubmittable(false));
     }, [form, values]);
     return (
@@ -37,6 +36,9 @@ function Dashboard() {
     const [text, setText] = useState('');
     const [isFormValid, setIsFormValid] = useState(false);
     const [submittable, setSubmittable] = React.useState(false);
+    const [isImgeData, setIsImgeClick] = useState('');
+    const [isImageModal, setImageModal] = useState(false);
+
 
     const {
         token: { colorBgContainer, borderRadiusLG },
@@ -108,8 +110,6 @@ function Dashboard() {
         setIsModalOpen(true);
     };
     const handleSubmit = () => {
-        console.log('Form Submitted:', { imageUrl, text });
-
         form.resetFields();
      setCardsData(cardsData.concat(
          {
@@ -122,7 +122,6 @@ function Dashboard() {
 
          }
      ))
-     console.log('cardsData',cardsData)
      messageApi.open({
         type: 'success',
         content: 'Content added successfully',
@@ -136,12 +135,21 @@ function Dashboard() {
         // setImageUrl(null);
         // setText('');
         setIsModalOpen(false);
+        setImageModal(false);
     };
+    const handleOk =()=> {
+        setImageModal(false);
+    }
+
+    const handleImgeClick = (data) => {
+        setImageModal(true);
+        setIsImgeClick(data);
+    }
     const [imageUrl, setImageUrl] = useState(null);
     const { Dragger } = Upload;
     const props = {
         name: 'file',
-        multiple: true,
+        maxCount: 1,
         action: 'https://669781c602f3150fb66de2e5.mockapi.io/api/uplaod/uploadfile',
         beforeUpload(file) {
             const isImage = file.type.startsWith('image/');
@@ -153,24 +161,36 @@ function Dashboard() {
         onChange(info) {
             setSubmittable(false)
             const { status, originFileObj } = info.file;
+            if (status == 'removed') {
+                message.error(`${info.file.name} removed successfully.`);
+                setSubmittable(false)
+            }
             if (status !== 'uploading') {
-                console.log(info.file, info.fileList);
                 const reader = new FileReader();
                 reader.onload = () => {
                     setImageUrl(reader.result);
                 };
                 reader.readAsDataURL(originFileObj);
+                setSubmittable(false)
 
             }
             if (status === 'done') {
                 message.success(`${info.file.name} file uploaded successfully.`);
                 setSubmittable(true)
-            } else if (status === 'error') {
+            }
+
+      
+            
+            else if (status === 'error') {
                 message.error(`${info.file.name} file upload failed.`);
+                setSubmittable(false)
+
             }
         },
         onDrop(e) {
             console.log('Dropped files', e.dataTransfer.files);
+            setSubmittable(true)
+
         },
     };
 
@@ -299,6 +319,7 @@ function Dashboard() {
                                     alt="avatar"
                                     src={item.imgPath}
                                     style={imgStyle}
+                                    onClick={() => handleImgeClick(item.imgPath)}
                                 />
                                 <Flex
                                     vertical
@@ -338,6 +359,10 @@ function Dashboard() {
                     ))}
                 </div>
             </Content>
+            <Modal title="Basic Modal" open={isImageModal} onCancel={handleCancel} onOk={handleOk}>
+                <img className='modelImage' src={isImgeData} alt="errrrr" />
+
+            </Modal>
 
         </div>
     );

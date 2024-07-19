@@ -15,7 +15,7 @@ function Sidebar() {
   } = useContext(connectionProvider);
 
 const navigate = useNavigate();
-  
+
 
 useEffect(() => {
 
@@ -39,8 +39,8 @@ useEffect(() => {
             // {
             //   key: '2',
             //   icon: <VideoCameraOutlined />,
-            //   label: 'UploadContent',
-            //   onClick : () => {navigate('/uploadContent', { replace: true })},
+            //   label: 'Logout',
+            //   onClick :()=>{logout()},
             // },
             // {
             //   key: '3',
