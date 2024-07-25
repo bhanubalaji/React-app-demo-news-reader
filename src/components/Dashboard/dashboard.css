@@ -24,3 +24,22 @@
   height: 100%;
 
 }
+
+.fileimg{
+  width: 13rem;
+  height: 13rem;
+}
+
+.file button img{
+  width: 2rem;
+  height: 2rem;
+}
+.file{
+  position: relative;
+}
+
+.file button {
+  position: absolute;
+  top: 36%;
+  left: 15%;
+}

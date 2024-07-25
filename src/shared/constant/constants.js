@@ -3,7 +3,8 @@ export const Constants = () => {
 
       logout: "/user/logout",
       login: "/user/login",
-
+      upload: "/upload",
+      getupload: "/getupload",
 
     };
     return constant;

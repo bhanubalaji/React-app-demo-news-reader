@@ -1,45 +1,32 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import deleteImg from "../../assets/delete.png";
+
 import './dashboard.css';
 import {
-    HeartOutlined, HeartFilled, LikeFilled, LikeOutlined, DislikeFilled,DislikeOutlined
+    HeartOutlined, HeartFilled, LikeFilled, LikeOutlined, DislikeFilled, DislikeOutlined
 } from '@ant-design/icons';
-import { Layout, theme, Space, Tooltip, Button, Card, Flex, Typography, Modal, Form, Input, message, Upload} from 'antd';
-import { InboxOutlined } from '@ant-design/icons';
+import { Layout, theme, Space, Tooltip, Button, Card, Flex, Typography, Modal, Form, Input, message, Upload } from 'antd';
+import { UploadOutlined } from '@ant-design/icons';
+import { UploadService } from '../../services/upload.services';
 
 const { TextArea } = Input;
 const { Content } = Layout;
-const SubmitButton = ({ form, children, text }) => {
-    const [submittable, setSubmittable] = React.useState(false);
-    
 
-
-    // Watch all values
-    const values = Form.useWatch([], form);
-    React.useEffect(() => {
-        form
-            .validateFields({
-                validateOnly: true,
-            })
-            .then(() => setSubmittable(text))
-            .catch(() => setSubmittable(false));
-    }, [form, values]);
-    return (
-        <Button type="primary" htmlType="submit" disabled={!submittable} onClick={() => { form.submit() }}>
-            {children}
-        </Button>
-    );
-};
 
 function Dashboard() {
     const [messageApi, contextHolder] = message.useMessage();
     const [form] = Form.useForm();
     const [text, setText] = useState('');
-    const [isFormValid, setIsFormValid] = useState(false);
     const [submittable, setSubmittable] = React.useState(false);
     const [isImgeData, setIsImgeClick] = useState('');
     const [isImageModal, setImageModal] = useState(false);
+    const [fileData, setfileData] = useState('');
+    const [isImageUpload, setIsImageUpload] = useState(false);
+    const [imageDisplay, setImageDisplay] = useState('');
 
 
+    const { upload } = UploadService();
+    const { getupload } = UploadService()
     const {
         token: { colorBgContainer, borderRadiusLG },
     } = theme.useToken();
@@ -51,56 +38,49 @@ function Dashboard() {
         display: 'block',
         width: 273,
     };
+    const [cardsData, setCardsData] = useState([{}]);
+    const values = Form.useWatch([], form);
 
 
-    const dashBoardCardData = [
-        {
-            id: 1,
-            imgPath: "https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png",
-            content: `Lorem ipsum dolor sit amet consectetur adipisicing elit. Minus temporibus sed fuga eum hic expedita nihil, atque modi dolorem laborum
-                    Iste enim accusamus rem hic ducimus deleniti numquam labore delectus voluptas molestias voluptatum doloribus, voluptatem incidunt! Odit,
-                                    temporibus, maxime veritatis perferendis quo aperiam explicabo rem id earum dolores eius illum`,
-            like: false,
-            love: false,
-            dislike: false
-        },
-        {
-            id: 2,
-            imgPath: "https://images.pexels.com/photos/674010/pexels-photo-674010.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500",
-            content: `Lorem ipsum dolor sit amet consectetur adipisicing elit. Minus temporibus sed fuga eum hic expedita nihil, atque modi dolorem laborum
-                    Iste enim accusamus rem hic ducimus deleniti numquam labore delectus voluptas molestias voluptatum doloribus, voluptatem incidunt! Odit,
-                                    temporibus, maxime veritatis perferendis quo aperiam explicabo rem id earum dolores eius illum` ,
-            like: false,
-            love: false,
-            dislike: false
 
-        },
-        {
-            id: 3,
-            imgPath: "https://letsenhance.io/static/8f5e523ee6b2479e26ecc91b9c25261e/1015f/MainAfter.jpg",
-            content: `Lorem ipsum dolor sit amet consectetur adipisicing elit. Minus temporibus sed fuga eum hic expedita nihil, atque modi dolorem laborum
-                    Iste enim accusamus rem hic ducimus deleniti numquam labore delectus voluptas molestias voluptatum doloribus, voluptatem incidunt! Odit,
-                                    temporibus, maxime veritatis perferendis quo aperiam explicabo rem id earum dolores eius illum`     ,
-            like: false,
-            love: false,
-            dislike: false
 
+    const fetchUpload = async () => {
+        try {
+            const response = await getupload();
+            console.log('response', response);
+            const data = response?.data?.data ? response?.data?.data : [];
+            data.forEach((item, index) => {
+                item.id = index + 1
+            })
+            setCardsData(data);
+        } catch (error) {
+            console.error('Error fetching upload data:', error);
         }
-    ]
+    };
 
+    useEffect(() => {
+        fetchUpload();
+    }, []);
 
-    const [cardsData, setCardsData] = useState(dashBoardCardData);
+    React.useEffect(() => {
+        form
+            .validateFields({
+                validateOnly: true,
+            })
+            .then(() => setSubmittable(true))
+            .catch(() => setSubmittable(false));
+    }, [form, values]);
 
     const handleClickOfLike = (id) => {
         setCardsData(cardsData.map(item =>
-            item.id == id ? { ...item, like: !item.like , dislike:false } : item
+            item.id == id ? { ...item, like: !item.like, dislike: false } : item
         ));
     };
     const handleClickOfDisLike = (id) => {
         setCardsData(cardsData.map(item =>
-            item.id == id ? { ...item, dislike: !item.dislike ,like: false} : item
+            item.id == id ? { ...item, dislike: !item.dislike, like: false } : item
         ));
-   
+
     };
     const handleClickLove = (id) => {
         setCardsData(cardsData.map(item => item.id == id ? { ...item, love: !item.love } : item));
@@ -109,35 +89,40 @@ function Dashboard() {
     const showModal = () => {
         setIsModalOpen(true);
     };
-    const handleSubmit = () => {
-        form.resetFields();
-     setCardsData(cardsData.concat(
-         {
-             id: cardsData.length + 1,
-             imgPath: imageUrl,
-             content: text,
-             like: false,
-             love: false,
-            dislike: false
 
-         }
-     ))
-     messageApi.open({
-        type: 'success',
-        content: 'Content added successfully',
-      });
-        ;
-        setIsModalOpen(false);
 
+    const handleSubmit = async () => {
+        const formDatas = new FormData();
+        console.log('formDatas', fileData);
+        formDatas.append('file', fileData);
+        formDatas.append('id', localStorage.getItem('loginResonseId'));
+        formDatas.append('description', text);
+
+        try {
+            const response = await upload(formDatas);
+            if (response.status === 200) {
+                console.log('Response:', response);
+                handleCancel();
+                fetchUpload()
+            }
+        } catch (error) {
+            console.log('Error:', error);
+            message.error(error?.response?.data?.message);
+        }
     };
+
+
     const handleCancel = () => {
         form.resetFields();
         // setImageUrl(null);
         // setText('');
         setIsModalOpen(false);
         setImageModal(false);
+        handleImageDelete();
     };
-    const handleOk =()=> {
+
+
+    const handleOk = () => {
         setImageModal(false);
     }
 
@@ -145,77 +130,47 @@ function Dashboard() {
         setImageModal(true);
         setIsImgeClick(data);
     }
-    const [imageUrl, setImageUrl] = useState(null);
-    const { Dragger } = Upload;
-    const props = {
-        name: 'file',
-        maxCount: 1,
-        action: 'https://669781c602f3150fb66de2e5.mockapi.io/api/uplaod/uploadfile',
-        beforeUpload(file) {
-            const isImage = file.type.startsWith('image/');
-            if (!isImage) {
-              message.error('You can only upload image files!');
-            }
-            return isImage || Upload.LIST_IGNORE;
-          },
-        onChange(info) {
-            setSubmittable(false)
-            const { status, originFileObj } = info.file;
-            if (status == 'removed') {
-                message.error(`${info.file.name} removed successfully.`);
-                setSubmittable(false)
-            }
-            if (status !== 'uploading') {
+
+    const handleFileChange = async (info) => {
+        const { status, originFileObj } = info.file;
+        console.log('originFileObj', originFileObj, info.file)
+        setfileData(originFileObj)
+        if (status === 'done') {
+            if (originFileObj.type.startsWith('image/')) {
                 const reader = new FileReader();
                 reader.onload = () => {
-                    setImageUrl(reader.result);
+                    setImageDisplay(reader.result);
+                    setIsImageUpload(true);
                 };
                 reader.readAsDataURL(originFileObj);
-                setSubmittable(false)
-
+            } else {
+                // Handle non-image files
+                setIsImageUpload(false);
             }
-            if (status === 'done') {
-                message.success(`${info.file.name} file uploaded successfully.`);
-                setSubmittable(true)
-            }
+        } else if (status === 'removed') {
+            setImageDisplay('');
+            setIsImageUpload(false);
+        }
+    };
 
-      
-            
-            else if (status === 'error') {
-                message.error(`${info.file.name} file upload failed.`);
-                setSubmittable(false)
-
-            }
-        },
-        onDrop(e) {
-            console.log('Dropped files', e.dataTransfer.files);
-            setSubmittable(true)
-
-        },
+    const handleImageDelete = () => {
+        setImageDisplay('');
+        setIsImageUpload(false);
+        form.resetFields(['file']);
     };
 
 
-    // const validateForm = () => {
-    //     form
-    //         .validateFields({
-    //             validateOnly: true,
-    //         })
-    //         .then(() => setIsFormValid(true))
-    //         .catch(() => setIsFormValid(false));
-    // };
-
     const handleTextChange = (e) => {
         setText(e.target.value);
-
+        console.log('isImageUpload', isImageUpload, submittable)
         // validateForm();
     };
 
 
     return (
-        
         <div className='mainDashboard'>
             <>
-            {contextHolder}
+                {contextHolder}
                 <div className="dashboard-model">
                     <Button type="primary" onClick={showModal}>
                         UPLOAD Content
@@ -223,31 +178,34 @@ function Dashboard() {
                 </div>
                 <Modal title="Basic Modal" open={isModalOpen} onCancel={handleCancel} footer={null}>
                     <>
+                        <Form layout="vertical" form={form} name="validateOnly" autoComplete="off" onFinish={handleSubmit}>
 
-
-                        <Form layout="vertical" form={form} name="validateOnly" autoComplete="off"  onFinish={handleSubmit}
-
-                        >
-                            <Form.Item
-                                label="UPLOAD IMAGE"
-                                name="image"
-                                rules={[
-                                    {
-                                        required: true,
-                                        message: 'Please upload image',
-                                    }
-                                ]}
-                            >
-                                <Dragger {...props}>
-                                    <p className="ant-upload-drag-icon">
-                                        <InboxOutlined />
-                                    </p>
-                                    <p className="ant-upload-text">Click or drag file to this area to upload</p>
-                                    <p className="ant-upload-hint">
-                                        Support for a single or bulk upload. Strictly prohibited from uploading company data or other
-                                        banned files.
-                                    </p>
-                                </Dragger>
+                            <Form.Item label="Upload File" name="file">
+                                <div>
+                                    {!isImageUpload ? (
+                                        <Upload
+                                            accept=".pdf, .ppt, .pptx, .jpg, .jpeg, .png, .gif, .doc, .docx, .wav, .mp3, .mp4"
+                                            customRequest={({ file, onSuccess }) => {
+                                                // Mock request for file upload (replace with actual upload logic)
+                                                setTimeout(() => {
+                                                    onSuccess();
+                                                    handleFileChange({ file: { ...file, status: 'done', originFileObj: file } });
+                                                }, 0);
+                                            }}
+                                            showUploadList={false}
+                                            onChange={handleFileChange}
+                                        >
+                                            <Button icon={<UploadOutlined />}>Attach File</Button>
+                                        </Upload>
+                                    ) : (
+                                        <div className="file">
+                                            <img className="fileimg" src={imageDisplay} alt="Uploaded" />
+                                            <Button onClick={handleImageDelete} type="link">
+                                                <img src={deleteImg} alt="Delete" />
+                                            </Button>
+                                        </div>
+                                    )}
+                                </div>
                             </Form.Item>
 
                             <Form.Item
@@ -264,7 +222,6 @@ function Dashboard() {
                                     },
                                 ]}
                             >
-
                                 <TextArea
                                     value={text}
                                     onChange={handleTextChange}
@@ -275,17 +232,15 @@ function Dashboard() {
                                     }}
                                 />
                             </Form.Item>
-                            <div className='submitCancelBox'>
 
+                            <div className='submitCancelBox'>
                                 <Form.Item>
                                     <Space>
-                                        <SubmitButton form={form} text={submittable}>Submit</SubmitButton>
-                                        <Button htmlType="reset">Reset</Button>
+                                        <Button type="primary" htmlType="submit" disabled={!isImageUpload || !submittable} >Submit </Button>
+                                        <Button htmlType="reset" onClick={handleImageDelete}>Reset</Button>
                                     </Space>
                                 </Form.Item>
                             </div>
-
-
                         </Form>
                     </>
                 </Modal>
@@ -302,8 +257,6 @@ function Dashboard() {
                 <div className='dashboardCard'>
 
                     {cardsData.map((item) => (
-
-
                         <Card key={item.id}
                             hoverable
                             style={cardStyle}
@@ -317,39 +270,39 @@ function Dashboard() {
                             <Flex >
                                 <img className='image-setting'
                                     alt="avatar"
-                                    src={item.imgPath}
+                                    src={item.content_ipfs_url}
                                     style={imgStyle}
-                                    onClick={() => handleImgeClick(item.imgPath)}
+                                    onClick={() => handleImgeClick(item.content_ipfs_url)}
                                 />
                                 <Flex
                                     vertical
                                     align="flex-start"
-                                    
+
                                     style={{
                                         padding: 32,
                                     }}
                                 >
                                     <Typography.Title level={3} onClick={() => handleClickLove(item.id)}>
-                                        {item.content}
+                                        {item.description}
                                     </Typography.Title>
 
                                     <Space.Compact block>
-                                    <div className='likelove-setting'>
-                                        <div className='likedislike'>
-                                        <Tooltip title="Like">
-                                            <Button icon={item.like ? <LikeFilled style={{ color: 'blue' }} /> : <LikeOutlined />}
-                                                onClick={() => handleClickOfLike(item.id)} />
-                                        </Tooltip>
-                                        <Tooltip title="Dislike">
-                                            <Button icon={item.dislike ? <DislikeFilled style={{ color: 'blue' }} /> : <DislikeOutlined />}
-                                                onClick={() => handleClickOfDisLike(item.id)} />
-                                        </Tooltip>
+                                        <div className='likelove-setting'>
+                                            <div className='likedislike'>
+                                                <Tooltip title="Like">
+                                                    <Button icon={item.like ? <LikeFilled style={{ color: 'blue' }} /> : <LikeOutlined />}
+                                                        onClick={() => handleClickOfLike(item.id)} />
+                                                </Tooltip>
+                                                <Tooltip title="Dislike">
+                                                    <Button icon={item.dislike ? <DislikeFilled style={{ color: 'blue' }} /> : <DislikeOutlined />}
+                                                        onClick={() => handleClickOfDisLike(item.id)} />
+                                                </Tooltip>
+                                            </div>
+                                            <Tooltip title="Heart">
+                                                <Button icon={item.love ? <HeartFilled style={{ color: 'red' }} /> : <HeartOutlined />}
+                                                    onClick={() => handleClickLove(item.id)} />
+                                            </Tooltip>
                                         </div>
-                                        <Tooltip title="Heart">
-                                            <Button icon={item.love ? <HeartFilled style={{ color: 'red' }} /> : <HeartOutlined />}
-                                                onClick={() => handleClickLove(item.id)} />
-                                        </Tooltip>
-                                    </div>
 
                                     </Space.Compact>
 
@@ -359,10 +312,16 @@ function Dashboard() {
                     ))}
                 </div>
             </Content>
+
+
+
+
             <Modal title="Basic Modal" open={isImageModal} onCancel={handleCancel} onOk={handleOk}>
                 <img className='modelImage' src={isImgeData} alt="errrrr" />
 
             </Modal>
+
+
 
         </div>
     );
@@ -370,3 +329,38 @@ function Dashboard() {
 
 
 export default Dashboard
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// const SubmitButton = ({ form, children, text }) => {
+//     const [submittable, setSubmittable] = React.useState(false);
+
+
+
+//     // Watch all values
+//     const values = Form.useWatch([], form);
+//     React.useEffect(() => {
+//         form
+//             .validateFields({
+//                 validateOnly: true,
+//             })
+//             .then(() => setSubmittable(text))
+//             .catch(() => setSubmittable(false));
+//     }, [form, values]);
+//     return (
+//         <Button type="primary" htmlType="submit" disabled={!submittable} onClick={() => { form.submit() }}>
+//             {children}
+//         </Button>
+//     );
+// };
